@@ -1,5 +1,3 @@
-<p align="center"> 从0开始构建一个属于你自己的PHP框架 <p>
-
 # 如何构建一个自己的PHP框架
 
 为什么我们要去构建一个自己的PHP框架？可能绝大多数的人都会说“市面上已经那么多的框架了，还造什么轮子？”。我的观点“造轮子不是目的，造轮子的过程中汲取到知识才是目的”。
@@ -41,6 +39,7 @@ app                             [PHP应用目录]
 │    │   └── route.php          [模块自定义路由]
 │    ├── common.php             [公共配置]
 │    ├── database.php           [数据库配置]
+│    ├── swoole.php             [swoole配置]
 │    └── nosql.php              [nosql配置]
 docs                            [接口文档目录]
 ├── apib                        [Api Blueprint]
@@ -51,12 +50,14 @@ framework                       [Easy PHP核心框架目录]
 │      ├── CoreHttpException.php[核心http异常]
 ├── handles                     [框架运行时挂载处理机制类目录]
 │      ├── Handle.php           [处理机制接口]
+│      ├── EnvHandle.php        [环境变量处理机制类]
 │      ├── ErrorHandle.php      [错误处理机制类]
 │      ├── ExceptionHandle.php  [未捕获异常处理机制类]
 │      ├── ConfigHandle.php     [配置文件处理机制类]
 │      ├── NosqlHandle.php      [nosql处理机制类]
 │      ├── LogHandle.php        [log机制类]
 │      ├── UserDefinedHandle.php[用户自定义处理机制类]
+│      ├── RouterSwooleHan...   [swoole模式路由处理机制类]
 │      └── RouterHandle.php     [路由处理机制类]
 ├── orm                         [对象关系模型]
 │      ├── Interpreter.php      [sql解析器]
@@ -64,6 +65,15 @@ framework                       [Easy PHP核心框架目录]
 │      ├── Model.php            [数据模型基类]
 │      └── db                   [数据库类目录]
 │          └── Mysql.php        [mysql实体类]
+├── router                      [路由策略]
+│      ├── RouterInterface.php  [路由策略接口]
+│      ├── General.php          [普通路由]
+│      ├── Pathinfo.php         [pathinfo路由]
+│      ├── Userdefined.php      [自定义路由]
+│      ├── Micromonomer.php     [微单体路由]
+│      ├── Job.php              [脚本任务路由]
+│      ├── EasySwooleRouter.php [swoole模式路由策略入口类]
+│      └── EasyRouter.php       [路由策略入口类]
 ├── nosql                       [nosql类目录]
 │    ├── Memcahed.php           [Memcahed类文件]
 │    ├── MongoDB.php            [MongoDB类文件]
@@ -75,6 +85,7 @@ framework                       [Easy PHP核心框架目录]
 ├── Request.php                 [请求类]
 ├── Response.php                [响应类]
 ├── run.php                     [框架应用启用脚本]
+├── swoole.php                  [swoole模式框架应用启用脚本]
 frontend                        [前端源码和资源目录]
 ├── src                         [资源目录]
 │    ├── components             [vue组件目录]
@@ -85,6 +96,9 @@ frontend                        [前端源码和资源目录]
 ├── app.vue                     [根组件]
 ├── index.template.html         [前端入口文件模板]
 ├── store.js                    [vuex store文件]
+├── .babelrc                    [babel配置文件]
+├── webpack.config.js           [webpack配置文件]
+├── yarn.lock                   [yarn　lock文件]
 jobs                            [脚本目录，写业务脚本的地方]
 ├── demo                        [模块目录]
 │    ├── Demo.php               [脚本演示文件]
@@ -94,6 +108,7 @@ public                          [公共资源目录，暴露到万维网]
 │    └── ...
 ├── index.html                  [前端入口文件,build生成的文件，不是发布分支忽略该文件]
 ├── index.php                   [后端入口文件]
+├── server.php                  [swoole模式后端入口文件]
 runtime                         [临时目录]
 ├── logs                        [日志目录]
 ├── build                       [php打包生成phar文件目录]
@@ -105,12 +120,13 @@ vendor                          [composer目录]
 .git-hooks                      [git钩子目录]
 ├── pre-commit                  [git pre-commit预commit钩子示例文件]
 ├── commit-msg                  [git commit-msg示例文件]
-.babelrc                        [babel配置文件]
+bin                             [自动化脚本目录]
+├── build                       [php打包脚本]
+├── cli                         [框架cli模式运行脚本]
+├── run                         [快速开始脚本]
 .env.example                    [环境变量示例文件]
 .gitignore                      [git忽略文件配置]
 .travis.yml                     [持续集成工具travis-ci配置文件]
-build                           [php打包脚本]
-cli                             [框架cli模式运行脚本]
 LICENSE                         [lincese文件]
 logo.png                        [框架logo图片]
 composer.json                   [composer配置文件]
@@ -119,10 +135,12 @@ package.json                    [前端依赖配置文件]
 phpunit.xml                     [phpunit配置文件]
 README-CN.md                    [中文版readme文件]
 README.md                       [readme文件]
-webpack.config.js               [webpack配置文件]
-yarn.lock                       [yarn　lock文件]
 
 ```
+
+# 生命周期
+
+<p align="center"><img width="90%" src="http://cdn.tigerb.cn/easy-php-en.png"><p>
 
 # 框架模块说明：
 
@@ -197,10 +215,9 @@ password = easyphp
 
 框架中所有的异常输出和控制器输出都是json格式，因为我认为在前后端完全分离的今天，这是很友善的，目前我们不需要再去考虑别的东西。
 
-请求参数校验，目前提供必传，长度，数字类型校验，使用如下
-
+##### 请求参数校验，目前提供必传，长度，数字类型校验，使用如下
 ```php
-$request = App::$container->getSingle('request');
+$request = App::$container->get('request');
 $request->check('username', 'require');
 $request->check('password', 'length', 12);
 $request->check('code', 'number');
@@ -211,6 +228,17 @@ $request->check('code', 'number');
 [[file: framework/Response.php](https://github.com/TIGERB/easy-php/blob/master/framework/Response.php)]
 
 ##  路由模块
+
+```
+├── router                      [路由策略]
+│      ├── RouterInterface.php  [路由策略接口]
+│      ├── General.php          [普通路由]
+│      ├── Pathinfo.php         [pathinfo路由]
+│      ├── Userdefined.php      [自定义路由]
+│      ├── Micromonomer.php     [微单体路由]
+│      ├── Job.php              [脚本任务路由]
+│      └── EasyRouter.php       [路由策略入口类]
+```
 
 通过用户访问的url信息，通过路由规则执行目标控制器类的的成员方法。我在这里把路由大致分成了四类：
 
@@ -228,7 +256,7 @@ domain/demo/index/modelExample
 
 **用户自定义路由**
 
-```php
+```
 // 定义在config/moduleName/route.php文件中，这个的this指向RouterHandle实例
 $this->get('v1/user/info', function (Framework\App $app) {
     return 'Hello Get Router';
@@ -313,7 +341,7 @@ $checkArguments->setNext($checkAppkey)
 
 // 启动网关
 $checkArguments->start(
-    APP::$container->getSingle('request')
+    APP::$container->get('request')
 );
 ```
 
@@ -517,7 +545,7 @@ App::$container->setSingle('request', function () {
     return new Request();
 });
 // 获取Request对象
-App::$container->getSingle('request');
+App::$container->get('request');
 ```
 
 [[file: framework/Container](https://github.com/TIGERB/easy-php/blob/master/framework/Container.php)]
@@ -538,6 +566,83 @@ App::$container->getSingle('mongodb');
 ```
 
 [[file: framework/nosql/*](https://github.com/TIGERB/easy-php/tree/master/framework/nosql)]
+
+##  日志模块
+
+日志作为一个第三方独立的模块使用，达到模块化的目的，日志类项目地址<https://github.com/easy-framework/easy-log>
+
+如何使用？如下，
+
+```php
+// env 配置示例
+[log]
+path = /runtime/logs/
+name = easy-php
+size = 512
+level= debug
+
+
+// 业务中如何打日志
+Log::debug('EASY PHP');
+Log::notice('EASY PHP');
+Log::warning('EASY PHP');
+Log::error('EASY PHP');
+```
+
+[[file: framework/handles/LogHandle.php](https://github.com/TIGERB/easy-php/blob/master/framework/handles/LogHandle.php)]
+
+##  Swoole模式
+
+支持swoole扩展下运行
+
+```
+cd public && php server.php
+```
+
+[[file: framework/swoole.php](https://github.com/TIGERB/easy-php/tree/master/framework/swoole.php)]
+
+##  Job模式
+
+我们可以在jobs目录下直接编写我们的任务脚本，如下
+
+```
+jobs                            [脚本目录，写业务脚本的地方]
+├── demo                        [模块目录]
+│    ├── Demo.php               [脚本演示文件]
+│    ├── ...
+```
+
+任务脚本示例:
+```php
+<?php
+namespace Jobs\Demo;
+
+/**
+ * Demo Jobs
+ *
+ * @author TIERGB <https://github.com/TIGERB>
+ */
+class Demo
+{
+    /**
+     * job
+     *
+     * @example php cli --jobs=demo.demo.test
+     */
+    public function test()
+    {
+        echo 'Hello Easy PHP Jobs';
+    }
+}
+
+```
+
+最后直接运行下面的命令即可：
+```
+php cli --job=demo.demo.test
+```
+
+[[file: jobs/*](https://github.com/TIGERB/easy-php/tree/feature/router/jobs)]
 
 ##  接口文档生成和接口模拟模块
 
@@ -626,6 +731,9 @@ runtime/build/App.20170505085503.phar
 require('runtime/build/App.20170505085503.phar');
 ```
 
+Command:
+> php cli --build
+
 [[file: ./build](https://github.com/TIGERB/easy-php/tree/master/build)]
 
 # 如何使用?
@@ -636,18 +744,13 @@ require('runtime/build/App.20170505085503.phar');
 
 **网站服务模式:**
 
+快速开始一个demo:
 ```
-步骤 1: yarn install
-步骤 2: DOMAIN=http://localhost:666 npm run demo
-步骤 3: cd public && sudo php -S localhost:666
-
-访问网站：http://localhost:666/index.html
-访问接口：http://localhost:666/Demo/Index/hello
-
+cd bin && php cli --run
+```
 demo如下：
-```
 
-<p align="center"><img width="30%" src="_media/demo.gif"><p>
+<p align="center"><img width="30%" src="demo.gif"><p>
 
 **客户端脚本模式:**
 
@@ -657,11 +760,17 @@ php cli --method=<module.controller.action> --<arguments>=<value> ...
 例如, php cli --method=demo.index.get --username=easy-php
 ```
 
+**Swoole模式:**
+
+```
+cd public && php server.php
+```
+
 获取帮助:
 
 使用命令 php cli 或者 php cli --help
 
-# 性能
+# 性能-fpm
 
 > ab -c 100 -n 10000 "http://easy-php.local/Demo/Index/hello"
 
@@ -699,6 +808,41 @@ Percentage of the requests served within a certain time (ms)
  100%     68 (longest request)
 ```
 
+# 性能-Swoole
+
+> ab -c 100 -n 10000 "http://easy-php.local/Demo/Index/hello"
+
+```
+Concurrency Level:      100
+Time taken for tests:   1.319 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      1870000 bytes
+HTML transferred:       160000 bytes
+Requests per second:    7580.84 [#/sec] (mean)
+Time per request:       13.191 [ms] (mean)
+Time per request:       0.132 [ms] (mean, across all concurrent requests)
+Transfer rate:          1384.39 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    5  10.6      3     172
+Processing:     1    9  13.4      7     177
+Waiting:        0    7  11.7      6     173
+Total:          3   13  16.9     11     179
+
+Percentage of the requests served within a certain time (ms)
+  50%     11
+  66%     12
+  75%     13
+  80%     14
+  90%     15
+  95%     17
+  98%     28
+  99%     39
+ 100%    179 (longest request)
+```
+
 # 问题和贡献
 
 不足的地方还有很多，如果大家发现了什么问题，可以给我提[issue](https://github.com/TIGERB/easy-php/issues)或者PR。
@@ -717,18 +861,27 @@ cp ./.git-hooks/* ./git/hooks
 
 # TODO
 
-- 重构路由，简化jobs路由流程
 - 增加数据库变更辅助
 - 集成swagger
 - 提供更友善的开发api帮助
 - 模块支持数据库nosql自定义配置
 - ORM提供更多链式操作api
-- 框架log行为进行级别分类
 - 想办法解决上线部署是配置文件问题
 - 基于phar文件打包部署
 - ...
 
 # DONE
+
+- v0.8.1(2018/06/24)
+    - 重构日志类
+    - 增加bin目录统一存放脚本文件
+
+- v0.8.0(2017/12/29)
+    - 支持swoole扩展
+    - 修复微单体路由无限递归问题
+
+- v0.7.1(2017/08/29)
+    - 重构路由模块
 
 - v0.7.0(2017/06/18)
     - 集成travis-ci实现持续集成部署
@@ -745,6 +898,13 @@ cp ./.git-hooks/* ./git/hooks
     - 变更Helper助手类的成员方法为框架函数，简化使用提高生产效率
     - 性能测试和优化
 
-# CONTACT
+## 赞赏
 
-<img src="_media/qrcode.jpg" width="200px">
+<img src="http://cdn.tigerb.cn/money-qrcode.jpg" width="300px">
+
+## 交流群
+
+<img src="http://cdn.tigerb.cn/wechat-blog-qrcode.jpg" width="300px">
+
+<img src="http://cdn.tigerb.cn/qrcode.jpg" width="200px">
+

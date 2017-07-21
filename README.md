@@ -38,6 +38,7 @@ app                             [application backend directory]
 │    │   └── route.php          [module-defined router]
 │    ├── common.php             [common config]
 │    ├── database.php           [database config]
+│    ├── swoole.php             [swoole config]
 │    └── nosql.php              [nosql config]
 docs                            [api document directory]
 ├── apib                        [Api Blueprint]
@@ -54,6 +55,7 @@ framework                       [easy-php framework directory]
 │      ├── NosqlHandle.php      [nosql handle class]
 │      ├── LogHandle.php        [log handle class]
 │      ├── UserDefinedHandle.php[user defined handle class]
+│      ├── RouterSwooleHan...   [router handle class for swoole mode]
 │      └── RouterHandle.php     [router handle class]
 ├── orm                         [datebase object relation map class directory]
 │      ├── Interpreter.php      [sql Interpreter class]
@@ -61,6 +63,15 @@ framework                       [easy-php framework directory]
 │      ├── Model.php            [data model]
 │      └── db                   [db type directory]
 │          └── Mysql.php        [mysql class file]
+├── router                      [router strategy]
+│      ├── RouterInterface.php  [router strategy interface]
+│      ├── General.php          [general strategy class]
+│      ├── Pathinfo.php         [pathinfo strategy class]
+│      ├── Userdefined.php      [userdefined strategy class]
+│      ├── Micromonomer.php     [micromonomer strategy class]
+│      ├── Job.php              [job strategy class]
+│      ├── EasySwooleRouter.php [router strategy entrance class for swoole mode]
+│      └── EasyRouter.php       [router strategy entrance class]
 ├── nosql                       [nosql directory]
 │    ├── Memcahed.php           [memcahed class file]
 │    ├── MongoDB.php            [mongoDB class file]
@@ -72,6 +83,7 @@ framework                       [easy-php framework directory]
 ├── Request.php                 [request object class file]
 ├── Response.php                [response object class file]
 ├── run.php                     [run this application script file]
+├── swoole.php                  [init the framework && swoole server]
 frontend                        [application frontend source code directory]
 ├── src                         [source folder]
 │    ├── components             [vue components]
@@ -82,6 +94,9 @@ frontend                        [application frontend source code directory]
 ├── app.vue                     [vue root component]
 ├── index.template.html         [frontend entrance template file]
 ├── store.js                    [vuex store file]
+├── .babelrc                    [babel　config file]
+├── webpack.config.js           [webpack config file]
+├── yarn.lock                   [yarn　lock file]
 jobs                            [Jobs folder, where write you business script]
 ├── demo                        [Module folder]
 │    ├── Demo.php               [Job script example file]
@@ -91,6 +106,7 @@ public                          [this is a resource directory to expose service 
 │    └── ...
 ├── index.html                  [entrance html file]
 ├── index.php                   [entrance php script file]
+├── server.php                  [init the server with swoole]
 runtime                         [temporary file such as log]
 ├── logs                        [log directory]
 ├── build                       [phar directory build by build script]
@@ -102,12 +118,13 @@ vendor                          [composer vendor directory]
 .git-hooks                      [git hooks directory]
 ├── pre-commit                  [git pre-commit example file]
 ├── commit-msg                  [git commit-msg example file]
-.babelrc                        [babel　config file]
+bin                             [the auto script folder]
+├── build                       [build php code to phar file script]
+├── cli                         [run this framework with the php cli mode]
+├── run                         [quick start script]
 .env.example                    [the environment variables example file]
 .gitignore                      [git ignore config file]
 .travis.yml                     [travis-ci config file]
-build                           [build php code to phar file script]
-cli                             [run this framework with the php cli mode]
 LICENSE                         [lincese　file]
 logo.png                        [logo picture]
 composer.json                   [composer file]
@@ -116,10 +133,12 @@ package.json                    [dependence file for frontend]
 phpunit.xml                     [phpunit config file]
 README-CN.md                    [readme file chinese]
 README.md                       [readme file]
-webpack.config.js               [webpack config file]
-yarn.lock                       [yarn　lock file]
 
 ```
+
+# Life Cycle
+
+<p align="center"><img width="90%" src="http://cdn.tigerb.cn/easy-php-en.png"><p>
 
 # Framework Module Description:
 
@@ -192,9 +211,9 @@ password = easyphp
 
 All output is json in the framework, neithor framework's core error or business logic's output, beacuse I think is friendly.
 
-Request param check, Support require/length/number check at present. Use as follows:
+##### Request param check, Support require/length/number check at present. Use as follows:
 ```php
-$request = App::$container->getSingle('request');
+$request = App::$container->get('request');
 $request->check('username', 'require');
 $request->check('password', 'length', 12);
 $request->check('code', 'number');
@@ -205,6 +224,17 @@ $request->check('code', 'number');
 [[file: framework/Response.php](https://github.com/TIGERB/easy-php/blob/master/framework/Response.php)]
 
 ##  Route Handle Module
+
+```
+├── router                      [datebase object relation map class directory]
+      ├── RouterInterface.php   [router strategy interface]
+      ├── General.php           [general strategy class]
+      ├── Pathinfo.php          [pathinfo strategy class]
+      ├── Userdefined.php       [userdefined strategy class]
+      ├── Micromonomer.php      [micromonomer strategy class]
+      ├── Job.php               [job strategy class]
+      └── EasyRouter.php        [router strategy entrance class]
+```
 
 Execute the target controller's function by the router parse the url information.Is composed of four types of:
 
@@ -309,7 +339,7 @@ $checkArguments->setNext($checkAppkey)
 
 // start gateway
 $checkArguments->start(
-    APP::$container->getSingle('request')
+    APP::$container->get('request')
 );
 ```
 
@@ -513,7 +543,7 @@ App::$container->setSingle('request', function () {
     return new Request();
 });
 // get Request instance
-App::$container->getSingle('request');
+App::$container->get('request');
 ```
 
 [[file: framework/Container](https://github.com/TIGERB/easy-php/blob/master/framework/Container.php)]
@@ -534,6 +564,83 @@ App::$container->getSingle('mongodb');
 ```
 
 [[file: framework/nosql/*](https://github.com/TIGERB/easy-php/tree/master/framework/nosql)]
+
+##  Log
+
+I make the log class like a third part module that be used by composer, the project link <https://github.com/easy-framework/easy-log>
+
+How to use? as follows:
+
+```php
+// env config
+[log]
+path = /runtime/logs/
+name = easy-php
+size = 512
+level= debug
+
+
+// How to use in your logic
+Log::debug('EASY PHP');
+Log::notice('EASY PHP');
+Log::warning('EASY PHP');
+Log::error('EASY PHP');
+```
+
+[[file: framework/handles/LogHandle.php](https://github.com/TIGERB/easy-php/blob/master/framework/handles/LogHandle.php)]
+
+##  Swoole Support
+
+This framework support swoole mode with the php extension swoole, just:
+
+```
+cd public && php server.php
+```
+
+[[file: framework/swoole.php](https://github.com/TIGERB/easy-php/tree/master/framework/swoole.php)]
+
+##  Job Support
+
+You can do some job in the jobs folder directly as follows:
+
+```
+jobs                            [Jobs folder, where write you business script]
+├── demo                        [Module folder]
+│    ├── Demo.php               [Job script example file]
+│    ├── ...
+```
+
+Job demo file:
+```php
+<?php
+namespace Jobs\Demo;
+
+/**
+ * Demo Jobs
+ *
+ * @author TIERGB <https://github.com/TIGERB>
+ */
+class Demo
+{
+    /**
+     * job
+     *
+     * @example php cli --jobs=demo.demo.test
+     */
+    public function test()
+    {
+        echo 'Hello Easy PHP Jobs';
+    }
+}
+
+```
+
+So, just run the command:
+```
+php cli --job=demo.demo.test
+```
+
+[[file: jobs/*](https://github.com/TIGERB/easy-php/tree/feature/router/jobs)]
 
 ##  Api Docs
 
@@ -618,7 +725,12 @@ runtime/build/App.20170505085503.phar
 <?php
 // require the phar file in index.php file
 require('runtime/build/App.20170505085503.phar');
+
 ```
+
+Command:
+> php cli --build
+
 
 [[file: ./build](https://github.com/TIGERB/easy-php/tree/master/build)]
 
@@ -630,17 +742,13 @@ Run：
 
 **Web Server Mode:**
 
+Quick Start:
 ```
-step 1: yarn install
-step 2: DOMAIN=http://localhost:666 npm run demo
-step 3: cd public && sudo php -S localhost:666
-
-visit web：http://localhost:666/index.html
-visit api：http://localhost:666/Demo/Index/hello
-
+cd bin && php cli --run
+```
 demo as follows：
-```
-<p align="center"><img width="30%" src="_media/demo.gif"><p>
+
+<p align="center"><img width="30%" src="demo.gif"><p>
 
 **Cli Mode:**
 
@@ -650,18 +758,21 @@ php cli --method=<module.controller.action> --<arguments>=<value> ...
 For example, php cli --method=demo.index.get --username=easy-php
 ```
 
+**Swoole Mode:**
+
+```
+cd public && php server.php
+```
+
 Get Help:
 
 Use php cli OR php cli --help
 
-# Performance
+# Performance with php-fmp
 
 > ab -c 100 -n 10000 "http://easy-php.local/Demo/Index/hello"
 
 ```
-Document Path:          /
-Document Length:        53 bytes
-
 Concurrency Level:      100
 Time taken for tests:   3.259 seconds
 Complete requests:      10000
@@ -692,6 +803,41 @@ Percentage of the requests served within a certain time (ms)
  100%     68 (longest request)
 ```
 
+# Performance with Swoole
+
+> ab -c 100 -n 10000 "http://easy-php.local/Demo/Index/hello"
+
+```
+Concurrency Level:      100
+Time taken for tests:   1.319 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      1870000 bytes
+HTML transferred:       160000 bytes
+Requests per second:    7580.84 [#/sec] (mean)
+Time per request:       13.191 [ms] (mean)
+Time per request:       0.132 [ms] (mean, across all concurrent requests)
+Transfer rate:          1384.39 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    5  10.6      3     172
+Processing:     1    9  13.4      7     177
+Waiting:        0    7  11.7      6     173
+Total:          3   13  16.9     11     179
+
+Percentage of the requests served within a certain time (ms)
+  50%     11
+  66%     12
+  75%     13
+  80%     14
+  90%     15
+  95%     17
+  98%     28
+  99%     39
+ 100%    179 (longest request)
+```
+
 # Question&Contribution
 
 If you find some question，please launch a [issue](https://github.com/TIGERB/easy-php/issues) or PR。
@@ -707,19 +853,28 @@ project address: [https://github.com/TIGERB/easy-php](https://github.com/TIGERB/
 
 # TODO
 
-- Refactor router handle and make the jobs route more simple
 - Add database sql helper
 - Integrate swagger
 - Provide much friendly help for user
 - Module's config support module-defined mysql and nosql configuration
 - ORM provide more apis
-- Make different rank for log
 - Resolve config problem when publish our project
 - implement auto deploy by used phar
 - ...
 
 
 # DONE
+
+- v0.8.1(2017/06/24)
+    - use easy log
+    - add folder bin
+
+- v0.8.0(2017/12/29)
+    - use swoole
+    - fix infinite recursion for micromonomer router
+
+- v0.7.1(2017/08/29)
+    - refactor router by the strategy design pattern 
 
 - v0.7.0(2017/06/18)
     - implement ci by travis-ci
@@ -735,3 +890,13 @@ project address: [https://github.com/TIGERB/easy-php](https://github.com/TIGERB/
     - The performance test and optimize
     - Use the lazy load thought to optimize the framework
     - Change Helper's method to the framework's function
+
+## APPRECIATION
+
+<img src="http://cdn.tigerb.cn/money-qrcode.jpg" width="300px">
+
+# CONTACT
+
+<img src="http://cdn.tigerb.cn/wechat-blog-qrcode.jpg" width="300px">
+
+<img src="http://cdn.tigerb.cn/qrcode.jpg" width="200px">
