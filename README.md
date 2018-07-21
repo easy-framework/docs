@@ -748,7 +748,7 @@ cd bin && php cli --run
 ```
 demo as follows：
 
-<p align="center"><img width="30%" src="demo.gif"><p>
+<p align="center"><img width="30%" src="http://cdn.tigerb.cn/demo.gif"><p>
 
 **Cli Mode:**
 
