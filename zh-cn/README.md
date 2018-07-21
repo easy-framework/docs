@@ -770,6 +770,10 @@ cd public && php server.php
 
 使用命令 php cli 或者 php cli --help
 
+# docker环境
+
+本框架提供docker开发环境，一行命令几分钟构建你的开发环境，详细请点击[easy-env](https://easy-framework.github.io/easy-env/)查看。
+
 # 性能-fpm
 
 > ab -c 100 -n 10000 "http://easy-php.local/Demo/Index/hello"
