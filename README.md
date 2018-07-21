@@ -768,6 +768,10 @@ Get Help:
 
 Use php cli OR php cli --help
 
+# Docker env
+
+Docker env is support by this framework, you will build the env just by one command quickly. Get more please click [easy-env](https://easy-framework.github.io/easy-env/).
+
 # Performance with php-fmp
 
 > ab -c 100 -n 10000 "http://easy-php.local/Demo/Index/hello"
