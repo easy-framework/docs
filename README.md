@@ -1,3 +1,9 @@
+# Docker env
+
+> Just one command to build all env for the easy-php
+
+[![easy-env](https://asciinema.org/a/219911.svg)](https://asciinema.org/a/219911?autoplay=1)
+
 # How to build a PHP framework by ourself ?
 
 Why do we need to build a PHP framework by ourself? Maybe the most of people will say "There have so many PHP frameworks be provided, but we still made a wheel?". My point is "Made a wheel is not our purpose, we will get a few of knowledge when making a wheel which is our really purpose".
@@ -868,6 +874,10 @@ project address: [https://github.com/TIGERB/easy-php](https://github.com/TIGERB/
 
 
 # DONE
+
+- v0.8.5(2018/01/06)
+    - fix error_report
+    - fix when __coreError is occur the response is output 200 but it also out put __coreError
 
 - v0.8.1(2017/06/24)
     - use easy log
