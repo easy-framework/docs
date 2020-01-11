@@ -283,9 +283,46 @@ app
 As above, we implemented a easy micro monolith structure.But how these module to communicate with each other? As follows:
 
 ```php
-App::$app->get('demo/index/hello', [
-    'user' => 'TIGERB'
-]);
+namespace App\CartService\Controllers;
+
+use Framework\App;
+
+/**
+ * Cart Service
+ *
+ * The Cart List API
+ *
+ * @desc default controller
+ *
+ * @author TIERGB <https://github.com/TIGERB>
+ */
+class List
+{
+
+    /**
+     * Example:
+     *
+     * @example domain/cart/list
+     * @return  json
+     */
+    public function get()
+    {
+        // code...
+
+        // For example, The Cart List API need the Sku's Stock
+        try {
+            // You can call other module bu the code 'App::$app->get()' such as:
+            // Call the Good Module to get the stock
+            $res = App::$app->get('goods/sku/stock', [
+                'sku_id' => '20200112',
+            ]);
+        } catch (Exception $e) {
+            // code...
+        }
+
+        // code...
+    }
+}
 ```
 
 So we can resolve this problem loose coupling. In the meantime, we can exchange our application to the SOA structure easily, beacuse we only need to change the method get implementing way in the App class, the way contain RPC, REST. etc.

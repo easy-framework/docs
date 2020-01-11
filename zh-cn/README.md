@@ -288,9 +288,49 @@ app
 如上，我们简单的在一个单体里构建了各个服务模块，但是这些模块怎么通信呢？如下：
 
 ```php
-App::$app->get('demo/index/hello', [
-    'user' => 'TIGERB'
-]);
+namespace App\CartService\Controllers;
+
+use Framework\App;
+
+/**
+ * 购物车服务
+ *
+ * 购物车列表接口
+ *
+ * @desc default controller
+ *
+ * @author TIERGB <https://github.com/TIGERB>
+ */
+class List
+{
+
+    /**
+     * 框架内部调用演示
+     *
+     * 极大的简化了内部模块依赖的问题
+     *
+     * 可构建微单体建构
+     *
+     * @example domain/cart/list
+     * @return  json
+     */
+    public function get()
+    {
+        // code...
+
+        // 比如，购物车列表依赖了商品服务的sku库存
+        try {
+            // 调用商品模块
+            $res = App::$app->get('goods/sku/stock', [
+                'sku_id' => '20200112',
+            ]);
+        } catch (Exception $e) {
+            // code...
+        }
+
+        // code...
+    }
+}
 ```
 
 通过上面的方式我们就可以松耦合的方式进行单体下各个模块的通信和依赖了。与此同时，业务的发展是难以预估的，未来当我们向SOA的架构迁移时，很简单，我们只需要把以往的模块独立成各个项目，然后把App实例get方法的实现转变为RPC或者REST的策略即可，我们可以通过配置文件去调整对应的策略或者把自己的，第三方的实现注册进去即可。
