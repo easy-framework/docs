@@ -147,7 +147,7 @@ README.md                       [readme文件]
 
 # 生命周期
 
-<p align="center"><img width="90%" src="http://cdn.tigerb.cn/easy-php-en.png"><p>
+<p align="center"><img width="90%" src="http://blog-1251019962.cos.ap-beijing.myqcloud.com/qiniu_img_2022/easy-php-en.png"><p>
 
 # 框架模块说明：
 
@@ -955,11 +955,11 @@ cp ./.git-hooks/* ./git/hooks
 
 ## 赞赏
 
-<img src="http://cdn.tigerb.cn/money-qrcode.jpg" width="300px">
+<img src="http://blog-1251019962.cos.ap-beijing.myqcloud.com/qiniu_img_2022/money-qrcode.jpg" width="300px">
 
 ## 交流群
 
-<img src="http://cdn.tigerb.cn/wechat-blog-qrcode.jpg" width="300px">
+<img src="http://blog-1251019962.cos.ap-beijing.myqcloud.com/qiniu_img_2022/wechat-blog-qrcode.jpg" width="300px">
 
-<img src="http://cdn.tigerb.cn/qrcode.jpg" width="200px">
+<img src="http://blog-1251019962.cos.ap-beijing.myqcloud.com/qiniu_img_2022/qrcode.jpg" width="200px">
 
